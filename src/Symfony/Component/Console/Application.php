@@ -47,9 +47,9 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  *
  * Usage:
  *
- *     $app = new Application('myapp', '1.0 (stable)');
- *     $app->add(new SimpleCommand());
- *     $app->run();
+ * $app = new Application('myapp', '1.0 (stable)');
+ * $app->add(new SimpleCommand());
+ * $app->run();
  *
  * @author Fabien Potencier <fabien@symfony.com>
  *
@@ -57,8 +57,8 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  */
 class Application
 {
-    private $commands = array();
-    private $wantHelps = false;
+    protected $commands = array();
+    protected $wantHelps = false;
     private $runningCommand;
     private $name;
     private $version;
@@ -73,7 +73,7 @@ class Application
     /**
      * Constructor.
      *
-     * @param string $name    The name of the application
+     * @param string $name The name of the application
      * @param string $version The version of the application
      *
      * @api
@@ -99,7 +99,7 @@ class Application
     /**
      * Runs the current application.
      *
-     * @param InputInterface  $input  An Input instance
+     * @param InputInterface $input An Input instance
      * @param OutputInterface $output An Output instance
      *
      * @return integer 0 if everything went fine, or an error code
@@ -158,7 +158,7 @@ class Application
     /**
      * Runs the current application.
      *
-     * @param InputInterface  $input  An Input instance
+     * @param InputInterface $input An Input instance
      * @param OutputInterface $output An Output instance
      *
      * @return integer 0 if everything went fine, or an error code
@@ -253,15 +253,15 @@ class Application
             $this->getLongVersion(),
             '',
             '<comment>Usage:</comment>',
-            '  [options] command [arguments]',
+            ' [options] command [arguments]',
             '',
             '<comment>Options:</comment>',
         );
 
         foreach ($this->getDefinition()->getOptions() as $option) {
-            $messages[] = sprintf('  %-29s %s %s',
+            $messages[] = sprintf(' %-29s %s %s',
                 '<info>--'.$option->getName().'</info>',
-                $option->getShortcut() ? '<info>-'.$option->getShortcut().'</info>' : '  ',
+                $option->getShortcut() ? '<info>-'.$option->getShortcut().'</info>' : ' ',
                 $option->getDescription()
             );
         }
@@ -390,9 +390,9 @@ class Application
      *
      * If a command with the same name already exists, it will be overridden.
      *
-     * @param Command $command A Command object
-     *
-     * @return Command The registered command
+     * @param Command $command
+     * @return Command
+     * @throws \LogicException
      *
      * @api
      */
@@ -505,12 +505,12 @@ class Application
 
             if ($alternatives = $this->findAlternatives($namespace, $allNamespaces, array())) {
                 if (1 == count($alternatives)) {
-                    $message .= "\n\nDid you mean this?\n    ";
+                    $message .= "\n\nDid you mean this?\n ";
                 } else {
-                    $message .= "\n\nDid you mean one of these?\n    ";
+                    $message .= "\n\nDid you mean one of these?\n ";
                 }
 
-                $message .= implode("\n    ", $alternatives);
+                $message .= implode("\n ", $alternatives);
             }
 
             throw new \InvalidArgumentException($message);
@@ -554,11 +554,11 @@ class Application
 
             if ($alternatives = $this->findAlternatives($name, $allCommands, array())) {
                 if (1 == count($alternatives)) {
-                    $message .= "\n\nDid you mean this?\n    ";
+                    $message .= "\n\nDid you mean this?\n ";
                 } else {
-                    $message .= "\n\nDid you mean one of these?\n    ";
+                    $message .= "\n\nDid you mean one of these?\n ";
                 }
-                $message .= implode("\n    ", $alternatives);
+                $message .= implode("\n ", $alternatives);
             }
 
             throw new \InvalidArgumentException($message);
@@ -634,8 +634,8 @@ class Application
     /**
      * Returns a text representation of the Application.
      *
-     * @param string  $namespace An optional namespace name
-     * @param boolean $raw       Whether to return raw command list
+     * @param string $namespace An optional namespace name
+     * @param boolean $raw Whether to return raw command list
      *
      * @return string A string representing the Application
      *
@@ -653,8 +653,8 @@ class Application
     /**
      * Returns an XML representation of the Application.
      *
-     * @param string  $namespace An optional namespace name
-     * @param Boolean $asDom     Whether to return a DOM or an XML string
+     * @param string $namespace An optional namespace name
+     * @param Boolean $asDom Whether to return a DOM or an XML string
      *
      * @return string|\DOMDocument An XML string representing the Application
      *
@@ -677,7 +677,7 @@ class Application
     /**
      * Renders a caught exception.
      *
-     * @param \Exception       $e      An exception instance
+     * @param \Exception $e An exception instance
      * @param OutputInterface $output An OutputInterface instance
      */
     public function renderException($e, $output)
@@ -695,7 +695,7 @@ class Application
         };
 
         do {
-            $title = sprintf('  [%s]  ', get_class($e));
+            $title = sprintf(' [%s] ', get_class($e));
             $len = $strlen($title);
             // HHVM only accepts 32 bits integer in str_split, even when PHP_INT_MAX is a 64 bit integer: https://github.com/facebook/hhvm/issues/1327
             $width = $this->getTerminalWidth() ? $this->getTerminalWidth() - 1 : (defined('HHVM_VERSION') ? 1 << 31 : PHP_INT_MAX);
@@ -704,7 +704,7 @@ class Application
             foreach (preg_split('/\r?\n/', $e->getMessage()) as $line) {
                 foreach (str_split($line, $width - 4) as $line) {
                     // pre-format lines to get the right string length
-                    $lineLength = $strlen(preg_replace('/\[[^m]*m/', '', $formatter->format($line))) + 4;
+                    $lineLength = $strlen(preg_replace('/[[^m]*m/', '', $formatter->format($line))) + 4;
                     $lines[] = array($line, $lineLength);
 
                     $len = max($lineLength, $len);
@@ -715,7 +715,7 @@ class Application
             $messages[] = $emptyLine = $formatter->format(sprintf('<error>%s</error>', str_repeat(' ', $len)));
             $messages[] = $formatter->format(sprintf('<error>%s%s</error>', $title, str_repeat(' ', max(0, $len - $strlen($title)))));
             foreach ($lines as $line) {
-                $messages[] = $formatter->format(sprintf('<error>  %s  %s</error>', $line[0], str_repeat(' ', $len - $line[1])));
+                $messages[] = $formatter->format(sprintf('<error> %s %s</error>', $line[0], str_repeat(' ', $len - $line[1])));
             }
             $messages[] = $emptyLine;
             $messages[] = '';
@@ -730,9 +730,9 @@ class Application
                 $trace = $e->getTrace();
                 array_unshift($trace, array(
                     'function' => '',
-                    'file'     => $e->getFile() != null ? $e->getFile() : 'n/a',
-                    'line'     => $e->getLine() != null ? $e->getLine() : 'n/a',
-                    'args'     => array(),
+                    'file' => $e->getFile() != null ? $e->getFile() : 'n/a',
+                    'line' => $e->getLine() != null ? $e->getLine() : 'n/a',
+                    'args' => array(),
                 ));
 
                 for ($i = 0, $count = count($trace); $i < $count; $i++) {
@@ -822,7 +822,7 @@ class Application
      *
      * Can be useful to force terminal dimensions for functional tests.
      *
-     * @param integer $width  The width
+     * @param integer $width The width
      * @param integer $height The height
      *
      * @return Application The current application
@@ -837,7 +837,7 @@ class Application
     /**
      * Configures the input and output instances based on the user arguments and options.
      *
-     * @param InputInterface  $input  An InputInterface instance
+     * @param InputInterface $input An InputInterface instance
      * @param OutputInterface $output An OutputInterface instance
      */
     protected function configureIO(InputInterface $input, OutputInterface $output)
@@ -876,9 +876,9 @@ class Application
      * If an event dispatcher has been attached to the application,
      * events are also dispatched during the life-cycle of the command.
      *
-     * @param Command         $command A Command instance
-     * @param InputInterface  $input   An Input instance
-     * @param OutputInterface $output  An Output instance
+     * @param Command $command A Command instance
+     * @param InputInterface $input An Input instance
+     * @param OutputInterface $output An Output instance
      *
      * @return integer 0 if everything went fine, or an error code
      */
@@ -937,12 +937,12 @@ class Application
         return new InputDefinition(array(
             new InputArgument('command', InputArgument::REQUIRED, 'The command to execute'),
 
-            new InputOption('--help',           '-h', InputOption::VALUE_NONE, 'Display this help message.'),
-            new InputOption('--quiet',          '-q', InputOption::VALUE_NONE, 'Do not output any message.'),
-            new InputOption('--verbose',        '-v|vv|vvv', InputOption::VALUE_NONE, 'Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug'),
-            new InputOption('--version',        '-V', InputOption::VALUE_NONE, 'Display this application version.'),
-            new InputOption('--ansi',           '',   InputOption::VALUE_NONE, 'Force ANSI output.'),
-            new InputOption('--no-ansi',        '',   InputOption::VALUE_NONE, 'Disable ANSI output.'),
+            new InputOption('--help', '-h', InputOption::VALUE_NONE, 'Display this help message.'),
+            new InputOption('--quiet', '-q', InputOption::VALUE_NONE, 'Do not output any message.'),
+            new InputOption('--verbose', '-v|vv|vvv', InputOption::VALUE_NONE, 'Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug'),
+            new InputOption('--version', '-V', InputOption::VALUE_NONE, 'Display this application version.'),
+            new InputOption('--ansi', '', InputOption::VALUE_NONE, 'Force ANSI output.'),
+            new InputOption('--no-ansi', '', InputOption::VALUE_NONE, 'Disable ANSI output.'),
             new InputOption('--no-interaction', '-n', InputOption::VALUE_NONE, 'Do not ask any interactive question.'),
         ));
     }
@@ -1038,7 +1038,7 @@ class Application
      *
      * This method is not part of public API and should not be used directly.
      *
-     * @param string $name  The full name of the command
+     * @param string $name The full name of the command
      * @param string $limit The maximum number of parts of the namespace
      *
      * @return string The namespace of the command
@@ -1055,8 +1055,8 @@ class Application
      * Finds alternative of $name among $collection,
      * if nothing is found in $collection, try in $abbrevs
      *
-     * @param string               $name       The string
-     * @param array|\Traversable   $collection The collection
+     * @param string $name The string
+     * @param array|\Traversable $collection The collection
      *
      * @return array A sorted array of similar string
      */
